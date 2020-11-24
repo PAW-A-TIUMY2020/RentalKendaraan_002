@@ -19,7 +19,7 @@ namespace RentalKendaraan_002.Controllers
         }
 
         // GET: Customers
-        public async Task<IActionResult> Index(string ktsd, string searchString, string sortOrder)
+        public async Task<IActionResult> Index(string ktsd, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
             //buat list menyimpan ketersediaan
             var ktsdList = new List<string>();
@@ -51,7 +51,40 @@ namespace RentalKendaraan_002.Controllers
             ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
 
-            return View(await menu.ToListAsync());
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    menu = menu.OrderByDescending(s => s.NamaCustomer);
+                    break;
+                case "Date":
+                    menu = menu.OrderBy(s => s.IdGenderNavigation.NamaGender);
+                    break;
+                case "date_desc":
+                    menu = menu.OrderByDescending(s => s.IdGenderNavigation.NamaGender);
+                    break;
+                default:
+                    menu = menu.OrderBy(s => s.NamaCustomer);
+                    break;
+            }
+
+            //membuat pagedList
+            ViewData["CurrentSort"] = sortOrder;
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
+            //definisi jumlah data pada halaman
+            int pageSize = 5;
+
+            return View(await PaginatedList<Customer>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
+            //return View(await menu.ToListAsync());
         }
 
         // GET: Customers/Details/5

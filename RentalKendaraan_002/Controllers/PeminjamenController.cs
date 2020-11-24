@@ -19,7 +19,7 @@ namespace RentalKendaraan_002.Controllers
         }
 
         // GET: Peminjamen
-        public async Task<IActionResult> Index(string ktsd, string searchString)
+        public async Task<IActionResult> Index(string ktsd, string searchString, string sortOrder, string currentFilter, int? pageNumber)
         {
             //buat list menyimpan ketersediaan
             var ktsdList = new List<string>();
@@ -50,7 +50,27 @@ namespace RentalKendaraan_002.Controllers
             //untuk sorting
             ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
-            return View(await _context.Peminjaman.ToListAsync());
+
+            switch (sortOrder)
+            {
+                case "name_desc":
+                    menu = menu.OrderByDescending(s => s.IdCustomerNavigation.NamaCustomer);
+                    break;
+                case "Date":
+                    menu = menu.OrderBy(s => s.TglPeminjaman);
+                    break;
+                case "date_desc":
+                    menu = menu.OrderBy(s => s.IdCustomerNavigation.NamaCustomer);
+                    break;
+            }
+
+
+            ViewData["CurrentFilter"] = searchString;
+            //definisi jumlah data pada halaman
+            int pageSize = 5;
+
+            return View(await PaginatedList<Peminjaman>.CreateAsync(menu.AsNoTracking(), pageNumber ?? 1, pageSize));
+            //return View(await _context.Peminjaman.ToListAsync());
         }
 
         // GET: Peminjamen/Details/5
